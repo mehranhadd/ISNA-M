@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "isna-m"
+version = "0.1.0"
+description = "A small Persian news dataset and tools for crawling, preprocessing, and baseline category classification."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "beautifulsoup4>=4.12",
+    "requests>=2.31",
+    "pandas>=2.0",
+    "numpy>=1.24",
+    "matplotlib>=3.7",
+    "arabic-reshaper>=3.0",
+    "python-bidi>=0.4.2",
+    "parsivar>=0.2.3",
+    "scikit-learn>=1.2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.4"]
+
+[project.scripts]
+isna-crawl = "isna_m.crawler:main"
+isna-clean = "isna_m.cleaner:main"
+isna-train = "isna_m.predictor:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

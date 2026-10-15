@@ -1,99 +1,152 @@
 # ISNA-M
-### A Small Dataset of Persian News Articles from ISNA News Agency.
 
-![The first 5 entry of `Raw_ISNA_Dataset.csv](df.head().png)
+A small dataset of Persian-language news articles from the Iranian Students' News Agency (ISNA), with scripts for crawling, text preprocessing, exploratory analysis, and a baseline category-classification experiment.
 
-This dataset includes 534 news articles published between 23:36(+3:30 GMT) 09/02/1404 Jalali Calendar(29/04/2025) to 00:48(+3:30 GMT) 10/02/1404(30/04/2025).
+![Preview of the raw dataset](reports/figures/dataset-preview.png)
 
-`Raw_ISNA_Dataset.csv` is collected by running `ISNA_crawler.py` and has 10 columns with the following description:
+## Dataset
+
+This repository includes 534 news articles published between 23:36(+3:30 GMT) 09/02/1404 Jalali Calendar(29/04/2025) to 00:48(+3:30 GMT) 10/02/1404(30/04/2025).
+
+| File | Description |
+|---|---|
+| `data/raw/Raw_ISNA_Dataset.csv` | Crawl, including article text, title, category, source, journalist, secretary, tags, publication date/time, weekday, and URL. |
+| `data/processed/Clean_ISNA_Dataset.csv` | Preprocessed article content and category labels for text experiments. |
+
+The raw file has 11 columns:
 | Content | Title | Category | Source | Journalist | Secretary | Tags | Week_Day | Date | Time | URL |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | The content of each news article | The title of each news article | The category of each news article | The source of each news article; whether it is from an ISNA journalist or from an external source | The journalist of each news article; if available | Secretaries of each news article | Tags of each news article | The week day of the publication of each news article | The date of the publication of each news article | The time of the publication of each news article | The URL to each news article |
-
-`Clean_ISNA_Dataset.csv` is obtained from `Raw_ISNA_Dataset.csv` by running `data_cleaner.py` and includes two columns:
+ 
+The processed file has two columns:
 | Content | Category |
 |---|---|
 | Lists of each article's words after preprocessing | Categories of each article after preprocessing |
 
 
-## Some statistics of the dataset
-| | `Raw_ISNA_Dataset.csv` | `Clean_ISNA_Dataset.csv` |
-|---|---|---|
+
+### Some statistics from the dataset:
+
+| Measure | Raw text | Processed text |
+|---|---:|---:|
 | Types (# Unique Words) | 20,993 | 13,696 |
 | Tokens (# All Words) | 224,540 | 167,118 |
 
-### Ranking of words against their frequencies in logscale(Zipf's Law)
-![Dirty Zipf's Law](./Dirty%20Zipf's%20Law(Log%20Scale).png) ![Clean Zipf's Law](./Clean%20Zipf's%20Law(Log%20Scale).png)
+## Quick start
 
-### Number of tokens against types(Heap's Law)
-![Dirty Heap's Law](./Dirty%20Heap's%20Law.png) ![Clean Heap's Law](./Clean%20Heap's%20Law.png)
+Python 3.10 or newer is required. From the repository root:
 
-### Top 10 most frequent words
-![Top 10 Words before preprocessing](./Dirty%20Top%2010%20Words%20Frequencies.png) ![Top 10 Words after preprocessing](./Clean%20Top%2010%20Words%20Frequencies.png)
+```bash
+python -m venv .venv
+```
 
-### Top 10 most frequent values of each feature
-![Top 10 most frequent categories](./Category.png) ![Top 10 most frequent sources](./Source.png)
-![Top 10 most frequent journalists](./Journalist.png) ![Top 10 most frequent secretaries](./Secretary.png)
+Activate the environment, then install the project and optional test dependency:
 
-### Number of unique values of each feature
-![Number of unique values of each feature](./unique.png)
+```bash
+# macOS / Linux
+source .venv/bin/activate
 
-# `ISNA_crawler.py`
-> [!WARNING]
-> The html tags used in this code may not work as the ISNA website's source code may change.
+# Windows PowerShell
+# .venv\Scripts\Activate.ps1
 
-Scrapes ISNA website and collects data using *requests, re* and *BeautifulSoup* libraries and stores the information as a CSV file via *pandas* library.
-First, crawls on ISNA's archive page and collect news articles' URLs. Then, obtains the desired information via crawling each article's web page. 
+python -m pip install --upgrade pip
+python -m pip install -e ".[dev]"
+```
 
-# `data_cleaner.py`
-Processes and analyses the `Raw_ISNA_Dataset.csv`, obtained from running `ISNA_crawler.py`, and stores processed contents and categories of each article to be used by `category_predictor.py` using *re, pandas, matplotlib* and [*parsivar*](https://github.com/ICTRC/Parsivar) libraries.
+### 1. Crawl ISNA
 
-*Tags, Time, Date, Week_Day, Category* and *Title* features are processed. Content of each article is split into words and then, stop words removal and stemming are applied.
-The above plots show some analyses that have been done on the data.
+```bash
+isna-crawl --pages 2 --delay 2 --output data/raw/Raw_ISNA_Dataset.csv
+```
 
-# `category_predictor.py`
-*pandas, numpy* and *scikitlearn* libraries are used to train a random forest classifier on the `Clean_ISNA_Dataset.csv`, which contains *Content*(predictor) and *Category*(label) columns. Scikitlearn's `CountVectorizer` is used to create Bag Of Words from contents and `OneHotEncoder` is applied on 83 unique label values.
-Data is divided into training and testing subsets with 0.4 test/train ratio. Classifiers with different `n_estimators` values(10, 25, 50, 100, 500 and 1000) are evaluated to find the best value.
-|`n_estimators`|***| precision | recall | f1-score |
-|:---:|:---:|:---:|:---:|:---:|
-|10| micro avg | 0.80 | 0.09 | 0.17 |
-|10| macro avg | 0.08 | 0.03 | 0.04 |
-|10| weighted avg | 0.21 | 0.09 | 0.12 |
-|10| samples avg |0.09 | 0.09 | 0.09 |
-|***|***|***|***|***|
-|25 |micro avg|0.74|0.09|0.17|
-|25 | macro avg | 0.05|0.03|0.03|
-|25 | weighted avg |0.18|0.09|0.11|
-|25 | samples avg |0.09 | 0.09 | 0.09 |
-|***|***|***|***|***|
-| 50| micro avg |0.78|0.07|0.12|
-|50| macro avg | 0.05  |    0.02 |0.03|
-|50| weighted avg | 0.16|      0.07   |   0.09| 
-|50| samples avg |0.07|      0.07|      0.07|
-|***|***|***|***|***|
-|100 | micro avg |0.71|      0.05|      0.09|
-|100| macro avg | 0.04|      0.01|      0.02|
-|100| weighted avg | 0.14|      0.05|      0.06|
-|100| samples avg |0.05|      0.05|      0.05|
-|***|***|***|***|***|
-| 500 | micro avg |0.75  |    0.04 |     0.08 |
-|500| macro avg |0.03 |     0.01  |    0.02|
-|500| weighted avg |0.10|      0.04|      0.05|
-|500| samples avg |0.04|      0.04|      0.04|
-|***|***|***|***|***|
-|1000| micro avg |0.77|      0.05|      0.09|
-|1000| macro avg |0.04|      0.02|      0.02|
-|1000| weighted avg |0.12|      0.05|      0.06 |
-|1000| samples avg |0.05|      0.05|      0.05|
+The default is 18 archive pages with a two-second delay between requests. The crawl may take a while and may fail if ISNA changes its page structure. Please respect the website's policies and avoid sending excessive requests.
 
-The above table is the summary of the outcome. It shows that the best value of the `n_estimators` is 10 and others overfit the data, which is not surprising due to the small amount of the dataset.
+### 2. Clean and analyse the raw dataset
 
-The poor results stem from:
+```bash
+isna-clean
+```
 
-1- **Small size of the dataset**. It only contains 167,118 words. This can be tackled by collecting or synthesising more data.
+Defaults are repository-relative, so the command can be run from another working directory after installation. It reads `data/raw/Raw_ISNA_Dataset.csv`, writes `data/processed/Clean_ISNA_Dataset.csv`, and regenerates figures in `reports/figures/`.
 
-2- **Sparsity of the labels**. Many categories have appeared less than 5 times and may appear only in training or testing subsets after spliting the data. This can be tackled by:
-- Collecting or synthesing more data from underrepresented labels.
-- Ignoring labels appeared once and make sure each label's samples are present in both training and testing subsets.
+Useful options:
 
-3- **Not robust model**. Other hyperparameters should be evaluated through a systematic grid search to find the best setting. Also, various architectures should be tried to find the best solution.
+```bash
+isna-clean --input path/to/raw.csv --output path/to/clean.csv --figures path/to/figures
+isna-clean --show-plots
+```
+
+The preprocessing pipeline cleans selected metadata fields, tokenizes Persian article text, removes the project's stop-word list, stems tokens with Parsivar, saves the processed dataset, and generates descriptive plots. It requires the dependencies installed by the project setup.
+
+### 3. Run the category baseline
+
+```bash
+isna-train
+```
+
+The default run evaluates random forests with 10, 25, 50, 100, 500, and 1,000 estimators using a bag-of-words representation. Choose a smaller run while experimenting:
+
+```bash
+isna-train --estimators 10 25 --max-features 1000 --output reports/baseline-run.txt
+```
+
+The classifier uses the cleaned dataset by default. The evaluation reports and experiment summary should be interpreted in the context of a small dataset with many infrequent categories; they are a baseline, not evidence of production-ready classification performance.
+
+## Exploratory figures
+
+The figures are kept in `reports/figures/`:
+
+### Word frequency and vocabulary growth
+
+![Zipf's law before preprocessing](reports/figures/Dirty%20Zipf's%20Law%28Log%20Scale%29.png)
+![Zipf's law after preprocessing](reports/figures/Clean%20Zipf's%20Law%28Log%20Scale%29.png)
+
+![Heap's law before preprocessing](reports/figures/Dirty%20Heap's%20Law.png)
+![Heap's law after preprocessing](reports/figures/Clean%20Heap's%20Law.png)
+
+![Top words before preprocessing](reports/figures/Dirty%20Top%2010%20Words%20Frequencies.png)
+![Top words after preprocessing](reports/figures/Clean%20Top%2010%20Words%20Frequencies.png)
+
+### Metadata distribution
+
+![Category counts](reports/figures/Category.png)
+![Source counts](reports/figures/Source.png)
+![Journalist counts](reports/figures/Journalist.png)
+![Secretary counts](reports/figures/Secretary.png)
+![Unique categorical values](reports/figures/unique.png)
+
+## Project structure
+
+```text
+ISNA-M/
+├── src/isna_m/
+│   ├── crawler.py       # Fetch article metadata and content
+│   ├── cleaner.py       # Persian text preprocessing and plots
+│   ├── predictor.py     # Random-forest baseline experiment
+│   └── paths.py         # Shared repository-relative paths
+├── data/
+│   ├── raw/             # Original CSV
+│   └── processed/       # Preprocessed CSV
+├── reports/
+│   ├── figures/         # Plots
+│   └── baseline-results.md
+├── tests/
+├── pyproject.toml
+└── requirements.txt
+```
+
+More detail about module responsibilities and known limitations is in [`ARCHITECTURE.md`](ARCHITECTURE.md).
+
+## Tests
+
+```bash
+python -m pytest
+```
+
+The tests cover parsing helpers, repository-relative paths, small cleaning utilities, and predictor input validation. They do not make network requests or run the full NLP pipeline.
+
+## Notes and limitations
+
+- The crawler depends on ISNA's current HTML tags and selectors, which may change.
+- Re-running the cleaning pipeline requires Parsivar, Matplotlib, `arabic-reshaper`, and `python-bidi`.
+- The dataset is small, and category frequencies are imbalanced. The baseline has limited predictive performance; see [`reports/baseline-results.md`](reports/baseline-results.md).
